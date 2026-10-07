@@ -212,11 +212,17 @@ video#review{width:100%;border-radius:16px;display:none;background:#000}
     <label class="f"><span>Coaching detail</span><select id="inten" aria-label="Coaching intensity"><option value="light">Light</option><option value="standard" selected>Standard</option><option value="director">Full</option></select></label>
   </div>
   <div class="grp"><h3>Voice</h3>
-    <label class="f"><span>Voice over voice</span><select id="vov" aria-label="Voice over voice"><option value="">Default</option></select></label>
+    <label class="f"><span>Voice</span><select id="veng" aria-label="Voice engine"><option value="nat" selected>Natural, on device</option><option value="sys">Browser voices</option></select></label>
+    <label class="f" id="r-kv"><span>Natural voice</span><select id="kv" aria-label="Natural voice"></select></label>
+    <label class="f" id="r-vov"><span>Browser voice</span><select id="vov" aria-label="Browser voice"><option value="">Default</option></select></label>
     <label class="f"><span>Voice over speed</span><input type="range" id="vor" min="70" max="150" value="105" aria-label="Voice over speed"></label>
     <label class="f"><span>Spoken coaching</span><input type="checkbox" id="voice"></label>
+    <label class="f"><span>Speech recognition</span><select id="seng" aria-label="Speech recognition engine"><option value="local" selected>On device, private</option><option value="sys">Browser</option></select></label>
+    <label class="f" id="r-smod"><span>Speech model</span><select id="smod" aria-label="Speech model"><option value="tiny">Fast</option><option value="base" selected>Balanced</option><option value="small">Most accurate</option></select></label>
     <label class="f"><span>Live pace check</span><input type="checkbox" id="va"></label>
-    <p class="note">Voice over reads a phrase into your earphones. Record with your camera or laptop mic, not the AirPods mic, for clean audio. Live pace check uses browser speech recognition, which may send audio to the browser vendor.</p>
+    <div class="btns"><button id="ntest">Test voice</button><button id="nload">Download models now</button></div>
+    <p class="note" id="nstat"></p>
+    <p class="note">Natural voice uses the open source Kokoro model and speech recognition uses OpenAI Whisper. Both run free inside your browser and your audio never leaves the device. Each downloads once, then works offline. For clean audio, record with your camera or laptop mic, not the AirPods mic.</p>
   </div>
   <div class="grp"><h3>Display</h3>
     <label class="f"><span>Text size</span><input type="range" id="size" min="20" max="90" value="40"></label>
@@ -378,7 +384,7 @@ function say2(c){
   if(c.txt===lastCue)return;lastCue=c.txt;
   if($('dmode').value==='director'&&playing&&now-lastVoice>3500){lastVoice=now;speak(c.say)}
 }
-function speak(t){if(!$('voice').checked||!window.speechSynthesis||(earOn()&&playing))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1.1;u.volume=.8;speechSynthesis.speak(u)}catch(e){}}
+function speak(t){if(!$('voice').checked||(earOn()&&playing))return;if(natOn()&&NV.st==='ready'){nvGen(t).then(b=>{if(!(earOn()&&playing))nvPlay(b,null,.8)}).catch(()=>{});return}if(!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1.1;u.volume=.8;speechSynthesis.speak(u)}catch(e){}}
 function upd(){
   const sc=$('scroller'),cue=$('cue'),mode=$('dmode').value;
   sc.classList.toggle('plain',mode==='read');
@@ -418,17 +424,116 @@ function loop(ts){
 function toggle(on){
   playing=on===undefined?!playing:on;last=0;
   $('play').dataset.on=playing?'1':'';$('play').setAttribute('aria-label',playing?'Pause':'Play');
-  earStop();if(playing&&earOn())earStart();
+  earStop();if(playing&&earOn()){if(natOn()){ac();if(NV.st==='off'){nvLoad().catch(()=>{});say('Downloading the natural voice. Browser voice is used until it is ready.')}}earStart()}
   if(playing)requestAnimationFrame(loop);
 }
 /* voice over: reads the script into the earphones phrase by phrase */
 const ES=window.speechSynthesis;let EAR={gen:0,k:-1,ph:'',st:0,dur:0,tm:null},CH=[];
-function earOn(){return !!ES&&$('vo').value!=='off'}
+function earOn(){return $('vo').value!=='off'&&(!!ES||!!window.Worker)}
+/* ===== Free, open source, on-device voice (Kokoro TTS) and speech recognition (Whisper) ===== */
+const KOKORO_URL='https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js';
+const TRANSFORMERS_URL='https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1/dist/transformers.min.js';
+const KOKORO_MODEL='onnx-community/Kokoro-82M-v1.0-ONNX';
+const SMOD={tiny:'Xenova/whisper-tiny.en',base:'Xenova/whisper-base.en',small:'Xenova/whisper-small.en'};
+const KV=[['af_heart','Heart (US, female)'],['af_bella','Bella (US, female)'],['af_nicole','Nicole (US, female, soft)'],['am_michael','Michael (US, male)'],['am_fenrir','Fenrir (US, male)'],['am_puck','Puck (US, male)'],['bf_emma','Emma (UK, female)'],['bf_isabella','Isabella (UK, female)'],['bm_george','George (UK, male)'],['bm_fable','Fable (UK, male)']];
+const MOBILE=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+const GPU_PROBE='async function gpu(){try{return !!(navigator.gpu&&await navigator.gpu.requestAdapter())}catch(e){return false}}';
+const TTS_SRC=`import {KokoroTTS} from '${KOKORO_URL}';${GPU_PROBE}
+let tts=null,chain=Promise.resolve();
+async function handle(m){try{
+  if(m.type==='load'){let g=!m.mobile&&await gpu();
+    const mk=d=>KokoroTTS.from_pretrained('${KOKORO_MODEL}',{dtype:d?'fp32':'q8',device:d?'webgpu':'wasm',progress_callback:p=>self.postMessage({type:'progress',p})});
+    try{tts=await mk(g)}catch(e){if(!g)throw e;g=false;tts=await mk(false)}
+    self.postMessage({type:'ready',gpu:g})}
+  else if(m.type==='gen'){const a=await tts.generate(m.text,{voice:m.voice,speed:m.speed}),d=a.audio;self.postMessage({type:'audio',id:m.id,audio:d,sr:a.sampling_rate},[d.buffer])}
+}catch(err){self.postMessage({type:'error',id:m.id,error:String(err&&err.message||err)})}}
+self.onmessage=e=>{chain=chain.then(()=>handle(e.data))};`;
+const ASR_SRC=`import {pipeline} from '${TRANSFORMERS_URL}';${GPU_PROBE}
+let asr=null,chain=Promise.resolve();
+async function handle(m){try{
+  if(m.type==='load'){let g=!m.mobile&&await gpu();
+    const mk=d=>pipeline('automatic-speech-recognition',m.model,{device:d?'webgpu':'wasm',dtype:d?{encoder_model:'fp32',decoder_model_merged:'q4'}:'q8',progress_callback:p=>self.postMessage({type:'progress',p})});
+    try{asr=await mk(g)}catch(e){if(!g)throw e;g=false;asr=await mk(false)}
+    self.postMessage({type:'ready',gpu:g})}
+  else if(m.type==='asr'){const o=await asr(m.audio);self.postMessage({type:'text',id:m.id,text:String(o&&o.text||'').trim()})}
+}catch(err){self.postMessage({type:'error',id:m.id,error:String(err&&err.message||err)})}}
+self.onmessage=e=>{chain=chain.then(()=>handle(e.data))};`;
+function mkWorker(src){return new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})),{type:'module'})}
+function engine(src,loadMsg,onOut){
+  const E={w:null,st:'off',pct:0,gpu:false,err:'',ready:null,id:0,q:new Map(),key:''};
+  E.load=(key,msg)=>{
+    if(E.ready&&E.key===key)return E.ready;
+    if(E.w){E.w.terminate();E.w=null;E.q.forEach(q=>q.rej(new Error('restarted')));E.q.clear()}
+    E.key=key;E.st='loading';E.pct=0;E.err='';nstat();
+    const files={};
+    E.ready=new Promise((res,rej)=>{
+      let w;try{w=E.w=mkWorker(src)}catch(e){E.st='error';E.err='Workers are blocked in this browser.';nstat();rej(e);return}
+      w.onmessage=e=>{const m=e.data;
+        if(m.type==='progress'){const p=m.p||{};if(p.status==='progress'&&p.total){files[p.file]=[p.loaded,p.total];let a=0,b=0;for(const k in files){a+=files[k][0];b+=files[k][1]}const v=Math.floor(a/b*100);if(v!==E.pct){E.pct=v;nstat()}}}
+        else if(m.type==='ready'){E.st='ready';E.gpu=m.gpu;nstat();res()}
+        else if(m.type==='error'&&m.id!=null&&E.q.has(m.id)){E.q.get(m.id).rej(new Error(m.error));E.q.delete(m.id)}
+        else if(m.type==='error'){E.st='error';E.err=m.error;nstat();rej(new Error(m.error))}
+        else if(E.q.has(m.id)){E.q.get(m.id).res(m);E.q.delete(m.id)}};
+      w.onerror=e=>{E.st='error';E.err=(e&&e.message)||'The model could not start.';nstat();rej(e)};
+      w.postMessage(Object.assign({type:'load',mobile:MOBILE},msg||{}));
+    });
+    E.ready.catch(()=>{E.ready=null;if(E.w){E.w.terminate();E.w=null}});
+    return E.ready;
+  };
+  E.run=(msg,transfer)=>E.load(E.key||'default').then(()=>new Promise((res,rej)=>{const id=++E.id;E.q.set(id,{res,rej});E.w.postMessage(Object.assign({id},msg),transfer||[])}));
+  return E;
+}
+const NV=engine(TTS_SRC),AS=engine(ASR_SRC);
+function nvLoad(){return NV.load('kokoro')}
+function asrLoad(){const m=SMOD[$('smod').value]||SMOD.base;return AS.load(m,{model:m})}
+function natOn(){return $('veng').value==='nat'&&!!window.Worker}
+function localSR(){return $('seng').value==='local'&&!!window.Worker}
+function nstat(){
+  const f=(E,name,size)=>E.st==='ready'?name+' ready'+(E.gpu?' (GPU)':''):E.st==='loading'?name+' downloading '+(E.pct||0)+'%'+(E.pct?'':' ('+size+', one time)'):E.st==='error'?name+' failed: '+E.err:name+' not downloaded yet ('+size+')';
+  const el=$('nstat');if(el)el.textContent=f(NV,'Natural voice',MOBILE?'about 90 MB':'90 to 330 MB')+'. '+f(AS,'Speech model',{tiny:'about 40 MB',base:'about 80 MB',small:'about 250 MB'}[$('smod').value]||'')+'.';
+}
+let AC=null,NSRC=null;
+function ac(){if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume().catch(()=>{});return AC}
+const NCACHE=new Map();
+function nvGen(text){
+  const voice=$('kv').value||'af_heart',speed=$('vor').value/100,key=voice+'|'+speed+'|'+text;
+  if(NCACHE.has(key))return NCACHE.get(key);
+  const p=nvLoad().then(()=>NV.run({type:'gen',text,voice,speed})).then(m=>{const c=ac(),b=c.createBuffer(1,m.audio.length,m.sr);b.copyToChannel(m.audio,0);return b});
+  NCACHE.set(key,p);p.catch(()=>NCACHE.delete(key));
+  if(NCACHE.size>80)NCACHE.delete(NCACHE.keys().next().value);
+  return p;
+}
+function nvPlay(buf,onend,vol){nvStopAudio();const c=ac(),s=c.createBufferSource(),g=c.createGain();g.gain.value=vol||1;s.buffer=buf;s.connect(g);g.connect(c.destination);s.onended=()=>{if(NSRC===s){NSRC=null;onend&&onend()}};NSRC=s;s.start();return s}
+function nvStopAudio(){if(NSRC){const s=NSRC;NSRC=null;try{s.stop()}catch(e){}}}
+/* microphone capture with a simple voice activity detector; hands 16 kHz speech segments to Whisper */
+async function micListen(onSeg,clock){
+  const dev=$('micsel').value;
+  const ms=await navigator.mediaDevices.getUserMedia({audio:{deviceId:dev?{exact:dev}:undefined,echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+  const c=new (window.AudioContext||window.webkitAudioContext)(),src=c.createMediaStreamSource(ms),pr=c.createScriptProcessor(4096,1,1),mute=c.createGain();
+  mute.gain.value=0;src.connect(pr);pr.connect(mute);mute.connect(c.destination);
+  const ratio=c.sampleRate/16000;let pre=[],buf=[],len=0,speaking=false,sil=0,voiced=0,floor=0.006,startAt=0;
+  const flush=()=>{if(len>16000*0.4&&voiced>0.2){const a=new Float32Array(len);let o=0;buf.forEach(b=>{a.set(b,o);o+=b.length});onSeg(a,startAt,startAt+len/16000)}buf=[];len=0;voiced=0};
+  pr.onaudioprocess=e=>{
+    const d=e.inputBuffer.getChannelData(0),n=Math.floor(d.length/ratio),o=new Float32Array(n);let s=0;
+    for(let i=0;i<n;i++){const a=Math.floor(i*ratio),b=Math.max(a+1,Math.min(d.length,Math.floor((i+1)*ratio)));let v=0;for(let j=a;j<b;j++)v+=d[j];o[i]=v/(b-a)}
+    for(let i=0;i<d.length;i++)s+=d[i]*d[i];
+    const rms=Math.sqrt(s/d.length),dt=d.length/c.sampleRate,loud=rms>Math.max(0.012,floor*3);
+    if(!loud)floor=floor*0.95+rms*0.05;
+    if(!speaking){pre.push(o);if(pre.length>4)pre.shift();
+      if(loud){speaking=true;buf=pre;pre=[];len=buf.reduce((a,b)=>a+b.length,0);startAt=clock()-len/16000;sil=0;voiced=dt}}
+    else{buf.push(o);len+=n;if(loud){sil=0;voiced+=dt}else sil+=dt;
+      if(sil>0.7||len>16000*12){speaking=false;flush()}}
+  };
+  return ()=>{try{pr.disconnect();src.disconnect()}catch(e){}if(speaking)flush();ms.getTracks().forEach(t=>t.stop());c.close().catch(()=>{})};
+}
+function cleanTx(t){return String(t||'').replace(/\[[^\]]*\]|\([^)]*\)/g,' ').replace(/\s+/g,' ').trim()}
+function asrText(a){return asrLoad().then(()=>AS.run({type:'asr',audio:a},[a.buffer])).then(m=>cleanTx(m.text))}
+
 function mkChunks(){
   CH=[];
   TL.forEach((e,i)=>{
-    const ws=e.ws.map(w=>w.textContent),n=ws.length;let a=0;
-    const cut=[];ws.forEach((w,j)=>{if(j<n-1&&(/[,;:]$/.test(w)||/^[-\u2013\u2014]$/.test(ws[j+1])||j-a>=8)&&j-a>=2){cut.push(j+1);a=j+1}});
+    const ws=e.ws.map(w=>w.textContent),n=ws.length,lead=$('vo').value==='lead',lim=lead?28:8;let a=0;
+    const cut=[];ws.forEach((w,j)=>{if(j<n-1&&j-a>=2&&(lead?j-a>=lim:(/[,;:]$/.test(w)||/^[-\u2013\u2014]$/.test(ws[j+1])||j-a>=lim))){cut.push(j+1);a=j+1}});
     let s0=0;cut.concat([n]).forEach(b=>{if(b<=s0)return;CH.push({i,a:s0,b,txt:ws.slice(s0,b).join(' '),t0:e.t0+e.ws0[s0],t1:b<n?e.t0+e.ws0[b]:e.t0+e.speak,end:b===n});s0=b});
   });
 }
@@ -439,7 +544,7 @@ function earT(){
   const f=Math.min(1,(performance.now()-EAR.st)/1000/Math.max(.2,EAR.dur));
   return c.t0+(c.t1-c.t0)*f;
 }
-function earStop(){EAR.gen++;clearTimeout(EAR.tm);if(ES)try{ES.cancel()}catch(e){}$('live').textContent=''}
+function earStop(){EAR.gen++;clearTimeout(EAR.tm);nvStopAudio();if(ES)try{ES.cancel()}catch(e){}$('live').textContent=''}
 function earStart(){
   if(!TL.length)return;mkChunks();
   let k=CH.findIndex(c=>c.t1>T+0.05);if(k<0){T=total;return}
@@ -451,12 +556,20 @@ function earSay(k,g){
   if(k>=CH.length){earPhase('done');return}
   const c=CH[k],mode=$('vo').value,rate=$('vor').value/100,est=c.txt.split(' ').length/(2.7*rate)+0.3;
   EAR.k=k;
-  const u=new SpeechSynthesisUtterance(c.txt),v=ES.getVoices().find(x=>x.name===$('vov').value);
-  if(v){u.voice=v;u.lang=v.lang}u.rate=rate;
   let done=false;const fin=()=>{if(done||g!==EAR.gen)return;done=true;clearTimeout(EAR.tm);
     const beat=c.end?Math.min(1.2,TL[c.i].pause*0.6):0.1;
     if(mode==='repeat'){const d=Math.max(0.6,c.t1-c.t0);earPhase('turn',d);EAR.tm=setTimeout(()=>{earPhase('gap');EAR.tm=setTimeout(()=>earSay(k+1,g),beat*1000)},d*1000)}
     else{earPhase('gap');EAR.tm=setTimeout(()=>earSay(k+1,g),beat*1000)}};
+  if(natOn()&&NV.st==='ready'){
+    earPhase('listen',est);$('live').textContent='Voice over: '+(mode==='repeat'?'listen':'talk one phrase behind');
+    nvGen(c.txt).then(b=>{if(done||g!==EAR.gen)return;clearTimeout(EAR.tm);if(mode!=='repeat')earPhase('turn',b.duration);nvPlay(b,fin);EAR.tm=setTimeout(fin,(b.duration+1.5)*1000)}).catch(fin);
+    for(let j=1;j<=3;j++)if(CH[k+j])nvGen(CH[k+j].txt).catch(()=>{});
+    EAR.tm=setTimeout(fin,30000);return;
+  }
+  if(natOn()&&NV.st==='off')nvLoad().catch(()=>{});
+  if(!ES){earPhase('turn',est);EAR.tm=setTimeout(fin,est*1000);return}
+  const u=new SpeechSynthesisUtterance(c.txt),v=ES.getVoices().find(x=>x.name===$('vov').value);
+  if(v){u.voice=v;u.lang=v.lang}u.rate=rate;
   u.onend=fin;u.onerror=fin;
   earPhase(mode==='repeat'?'listen':'turn',est);
   if(mode!=='repeat')$('live').textContent='Voice over: talk one phrase behind';
@@ -465,7 +578,7 @@ function earSay(k,g){
 }
 function earResync(){if(playing&&earOn()){earStop();earStart()}}
 function voFill(){if(!ES)return;const sel=$('vov'),keep=sel.value||(JSON.parse(store('tp.set')||'{}').vov||''),vs=ES.getVoices();if(!vs.length)return;sel.textContent='';const d=document.createElement('option');d.value='';d.textContent='Default voice';sel.appendChild(d);const lg=(navigator.language||'en').slice(0,2);vs.filter(v=>v.lang.slice(0,2)===lg).concat(vs.filter(v=>v.lang.slice(0,2)!==lg)).forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o)});sel.value=keep}
-if(ES){voFill();ES.addEventListener&&ES.addEventListener('voiceschanged',voFill)}else{$('vo').disabled=true;$('vo').title='Voice over is not supported in this browser'}
+if(ES){voFill();ES.addEventListener&&ES.addEventListener('voiceschanged',voFill)}else if(!window.Worker){$('vo').disabled=true;$('vo').title='Voice over is not supported in this browser'}
 function setWpm(v){wpm=Math.min(300,Math.max(30,Math.round(+v)||145));$('wpm').value=wpm;$('wpmN').value=wpm;render();earResync()}
 async function intro(){if($('dmode').value==='director'&&$('voice').checked&&window.speechSynthesis){speak("You're ready. I'll keep the coaching subtle.");await new Promise(r=>setTimeout(r,3200))}}
 $('script').addEventListener('input',()=>{render();clearTimeout(window._s);window._s=setTimeout(()=>{store('tp.script',$('script').value);$('saved').textContent='Saved'},400)});
@@ -612,8 +725,25 @@ let sr=null,vOn=false,vw=[],vf=[],marks=[],vlast=0,rushN=0,dr=null;
 const FILL=/^(um|uh|uhm|umm|like|basically|actually|literally)$/i;
 function el(){return (Date.now()-t0-paused)/1000}
 function flash(txt,sayIt){const c=$('cue');c.textContent=txt;c.style.display='block';flashUntil=performance.now()+2500;if($('dmode').value==='director')speak(sayIt)}
+let vSess=0,vPend=[],vMic=null;
+function heard(tx,ta,tb){
+  const ws=tx.split(/\s+/).filter(Boolean);if(!ws.length)return;
+  const step=(tb-ta)/ws.length;
+  ws.forEach((w,j)=>{const t=ta+step*j,c=w.replace(/[^\w']/g,'');if(!c)return;vw.push({t,w:c});if(FILL.test(c))vf.push({t,w:c.toLowerCase()})});
+  (tx.match(/\byou know\b/gi)||[]).forEach(()=>vf.push({t:tb,w:'you know'}));
+  vw.sort((a,b)=>a.t-b.t);
+}
 function vStart(){
   if(!$('va').checked)return;
+  if(localSR()){
+    vw=[];vf=[];vlast=0;rushN=0;vOn=true;vPend=[];const ss=++vSess;
+    if(AS.st!=='ready')say('Loading the on-device speech model for the pace check. It works as soon as it is ready.');
+    asrLoad().catch(()=>say('The speech model could not load. Check your connection and try again.',true));
+    micListen((a,ta,tb)=>{const p=asrText(a).then(tx=>{if(ss===vSess&&tx){heard(tx,ta,tb);if(vOn)live()}}).catch(()=>{});vPend.push(p)},el)
+      .then(stop=>{if(ss===vSess&&vOn){vMic=stop;$('sVA').classList.add('on')}else stop()})
+      .catch(()=>{vOn=false;say('Microphone permission was denied, so the pace check is off.',true)});
+    return;
+  }
   if(!SR){say('Voice analysis is not supported in this browser. Recording continues without it.',true);return}
   vw=[];vf=[];vlast=0;rushN=0;vOn=true;
   try{
@@ -642,13 +772,15 @@ function live(){
 }
 function row(txt){const d=document.createElement('div');d.textContent=txt;$('report').appendChild(d);return d}
 function seekBtn(d,t,label){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{const v=$('review');if(v.src){v.currentTime=t;v.play().catch(()=>{})}};d.appendChild(b)}
-function vStop(){
+async function vStop(){
   const was=vOn;vOn=false;$('sVA').classList.remove('on');
   if(sr){try{sr.stop()}catch(e){}sr=null}
+  if(vMic){vMic();vMic=null}
   $('live').textContent='';
   if(!was)return;
+  if(vPend.length){const R0=$('report');R0.textContent='';row('Finishing the transcript...');await Promise.race([Promise.allSettled(vPend),new Promise(r=>setTimeout(r,10000))]);vPend=[]}
   const dur=el(),R=$('report');R.textContent='';
-  const h=document.createElement('h2');h.textContent='Performance report (estimates from speech recognition)';R.appendChild(h);
+  const h=document.createElement('h2');h.textContent='Performance report';R.appendChild(h);
   if(vw.length<5){row('Not enough speech was recognised to analyse this take.');return}
   const avg=Math.round(vw.length/dur*60),bins=[];
   for(let t=0;t+10<=dur;t+=10)bins.push({t,n:vw.filter(w=>w.t>=t&&w.t<t+10).length*6});
@@ -662,7 +794,22 @@ function vStop(){
   if(marks.length){const d=row('Your marks: ');marks.forEach(t=>seekBtn(d,t,fmt(t)))}
   row('Director note: '+(avg>wpm*1.15?'Slow down around '+fmt(fast.t)+' and let key lines land.':'Your pacing worked. Add a longer pause before your closing line.'));
 }
+let dLocal=null;
+function dictAdd(t){
+  t=t.replace(/\s*\bnew paragraph\b[.,]?\s*/gi,'\n\n').replace(/\s*\bquestion mark\b/gi,'?').replace(/\s*\bexclamation (mark|point)\b/gi,'!').replace(/\s*\bcomma\b/gi,',').replace(/\s*\b(period|full stop)\b/gi,'.');
+  const ta=$('script');ta.value+=(ta.value&&!/\s$/.test(ta.value)&&!/^[\n.,?!]/.test(t)?' ':'')+t;ta.dispatchEvent(new Event('input'));
+}
 $('dict').onclick=()=>{
+  if(localSR()){
+    if(dLocal){const st=dLocal;dLocal=null;$('dict').textContent='Dictate';st.then(f=>f&&f()).catch(()=>{});return}
+    $('dict').textContent='Stop dictation';
+    if(AS.st!=='ready')say('Loading the on-device speech model. Start talking, your words appear after each pause.');else say('Listening. Your words appear after each pause.');
+    asrLoad().catch(()=>{say('The speech model could not load. Check your connection.',true)});
+    let q=Promise.resolve();
+    dLocal=micListen(a=>{const p=asrText(a);q=q.then(()=>p.then(t=>{if(t)dictAdd(t)}).catch(()=>{}))},()=>performance.now()/1000)
+      .catch(()=>{dLocal=null;$('dict').textContent='Dictate';say('Microphone permission was denied.',true);return null});
+    return;
+  }
   if(!SR){say('Dictation is not supported in this browser.',true);return}
   if(dr){const d=dr;dr=null;d.stop();$('dict').textContent='Dictate';return}
   dr=new SR();dr.continuous=true;dr.interimResults=false;dr.lang=navigator.language||'en-US';
@@ -842,7 +989,7 @@ document.addEventListener('click',e=>{document.querySelectorAll('details.menu[op
 document.querySelectorAll('[data-tab],[data-go]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab||b.dataset.go)));
 
 let cur=null,st=null,loading=false,EYE=.38,quiet=0;
-const SET=['vo','vov','vor','pb','hl','size','font','align','tcol','lhr','lsr','eyep','focus','ovo','ovp','dmode','inten','plen','cd','mode','grid','res'];
+const SET=['veng','kv','seng','smod','vo','vov','vor','pb','hl','size','font','align','tcol','lhr','lsr','eyep','focus','ovo','ovp','dmode','inten','plen','cd','mode','grid','res'];
 function newScript(text,name){return {id:String(Date.now())+Math.floor(Math.random()*99),name:name||'Untitled script',text:text||'',fav:false,updated:Date.now(),versions:[]}}
 const sAll=async()=>(await tx('readonly',x=>x.getAll(),'scripts'))||[];
 const sPut=o=>tx('readwrite',x=>x.put(o),'scripts');
@@ -913,6 +1060,21 @@ function loadSet(){
   look();render();
 }
 SET.forEach(id=>$(id).addEventListener('input',()=>{look();saveSet()}));
+(function(){
+  const kv=$('kv');KV.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;kv.appendChild(o)});
+  try{const sv=JSON.parse(store('tp.set')||'{}');if(sv.kv)kv.value=sv.kv;if(!kv.value)kv.value='af_heart'}catch(e){kv.value='af_heart'}
+  const rows=()=>{$('r-kv').style.display=$('veng').value==='nat'?'':'none';$('r-vov').style.display=$('veng').value==='nat'?'none':'';$('r-smod').style.display=$('seng').value==='local'?'':'none';nstat()};
+  ['veng','seng','smod'].forEach(id=>$(id).addEventListener('change',rows));rows();
+  $('smod').addEventListener('change',()=>{if(AS.st!=='off')asrLoad().catch(()=>{})});
+  $('kv').addEventListener('change',()=>{if(NV.st==='ready')$('ntest').click()});
+  $('nload').onclick=()=>{if(natOn())nvLoad().catch(()=>{});if(localSR())asrLoad().catch(()=>{});nstat()};
+  $('ntest').onclick=()=>{
+    const line='Hi, I will read your script into your earphones. Take a breath, and speak it in your own words.';
+    if(natOn()){ac();if(NV.st!=='ready')say('Downloading the natural voice. It plays as soon as it is ready.');nvGen(line).then(b=>nvPlay(b)).catch(()=>say('The natural voice could not load. Check your connection and try again.',true));return}
+    if(ES){ES.cancel();const u=new SpeechSynthesisUtterance(line),v=ES.getVoices().find(x=>x.name===$('vov').value);if(v)u.voice=v;u.rate=$('vor').value/100;ES.speak(u)}
+  };
+  $('vo').addEventListener('change',()=>{if($('vo').value!=='off'&&natOn()&&NV.st==='off')nvLoad().catch(()=>{})});
+})();
 /* devices and retake */
 function vc(){const r=$('res').value.split('x'),o={width:{ideal:+r[0]},height:{ideal:+r[1]},facingMode:'user'};if($('camsel').value)o.deviceId={exact:$('camsel').value};return o}
 function ac(){const o={echoCancellation:true,noiseSuppression:true};if($('micsel').value)o.deviceId={exact:$('micsel').value};return o}
