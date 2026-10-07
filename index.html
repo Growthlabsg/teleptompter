@@ -2,44 +2,78 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0c0c0d">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%20%22Teleprompter%20Studio%22%2C%20%22short_name%22%3A%20%22Prompter%22%2C%20%22start_url%22%3A%20%22.%22%2C%20%22display%22%3A%20%22standalone%22%2C%20%22background_color%22%3A%20%22%23f4f5f7%22%2C%20%22theme_color%22%3A%20%22%23f4f5f7%22%2C%20%22icons%22%3A%20%5B%7B%22src%22%3A%20%22data%3Aimage/svg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI%2BPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwYzBjMGQiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNCIgZmlsbD0iI2ZmM2IzMCIvPjwvc3ZnPg%3D%3D%22%2C%20%22sizes%22%3A%20%22any%22%2C%20%22type%22%3A%20%22image/svg%2Bxml%22%7D%5D%7D">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwYzBjMGQiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNCIgZmlsbD0iI2ZmM2IzMCIvPjwvc3ZnPg==">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwYzBjMGQiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNCIgZmlsbD0iI2ZmM2IzMCIvPjwvc3ZnPg==">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101114" media="(prefers-color-scheme: dark)">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Teleprompter Studio</title>
 <style>
-:root{--bg:#0c0c0d;--panel:#151517;--line:#26262a;--fg:#f4f4f5;--mut:#8d8d93;--acc:#ff3b30;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f7f7f8;--panel:#fff;--line:#e0e0e4;--fg:#111;--mut:#6a6a70}}
-*{box-sizing:border-box}html,body{margin:0}
-body{background:var(--bg);color:var(--fg);font:15px/1.55 Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-header{display:flex;align-items:center;gap:20px;padding:10px 24px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.brand{font-weight:700;font-size:16px}
-nav{display:flex;gap:4px}
-nav button{border:0;background:none;color:var(--mut);font-weight:600;padding:8px 14px}
-nav button.on{color:var(--fg);background:var(--panel)}
-.status{margin-left:auto;display:flex;gap:14px;font-size:12px;color:var(--mut)}
-@media (max-width:720px){.status{display:none}header{padding:8px 12px}}
-.dot::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mut);margin-right:6px}
-.dot.on::before{background:#34c759}.dot.rec::before{background:var(--acc)}
-main{max-width:980px;margin:0 auto;padding:24px 20px 80px}
+:root{--bg:#f4f5f7;--surf:#ffffff;--sunk:#eceef1;--line:#e2e4e8;--fg:#16181d;--mut:#6b7079;--acc:#e5484d;--mark:#f7c948;--r:10px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101114;--surf:#1a1c20;--sunk:#15171a;--line:#2a2d33;--fg:#ecedef;--mut:#8b9099;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101114;--surf:#1a1c20;--sunk:#15171a;--line:#2a2d33;--fg:#ecedef;--mut:#8b9099;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;overflow-x:clip}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+/* top bar */
+header{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:12px 24px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.brand{font-weight:650;font-size:15px;letter-spacing:-.01em}
+nav{display:flex;gap:2px;background:var(--sunk);padding:3px;border-radius:999px}
+nav button{border:0;background:none;color:var(--mut);font-weight:550;font-size:14px;padding:6px 16px;border-radius:999px}
+nav button:hover{color:var(--fg);background:none}
+nav button.on{color:var(--fg);background:var(--surf);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.status{display:none}
+@media (max-width:640px){header{grid-template-columns:1fr;justify-items:center;gap:8px;padding:10px 12px}.brand{display:none}nav button{padding:6px 12px}}
+main{max-width:920px;margin:0 auto;padding:12px 20px 96px}
 .tab{display:none}.tab.on{display:block}
-h1{font-size:22px;margin:0 0 4px}h2{font-size:13px;color:var(--mut);font-weight:600;margin:28px 0 8px}
-p.lead{color:var(--mut);margin:0 0 16px}
-textarea{width:100%;min-height:340px;resize:vertical;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:16px;font:16px/1.7 inherit}
-button,select{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font:inherit;cursor:pointer}
-button:hover{border-color:var(--mut)}button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
-button:disabled{opacity:.4;cursor:not-allowed}
-textarea:focus,button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.bar,.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.sp{flex:1}
+h1{font-size:26px;font-weight:650;letter-spacing:-.02em;margin:24px 0 4px}
+h2{font-size:14px;font-weight:600;margin:32px 0 10px}
+p.lead{color:var(--mut);margin:0 0 20px}
 .meta{color:var(--mut);font-size:13px}
-label{font-size:13px;color:var(--mut);display:flex;align-items:center;gap:6px}
-input[type=range]{accent-color:var(--acc)}
-input[type=number],input.t{width:76px;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px}
-details{margin-top:20px;border-top:1px solid var(--line);padding-top:12px}
-summary{cursor:pointer;color:var(--mut);font-size:14px;font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin-top:16px}
-.g{display:flex;flex-direction:column;gap:10px;align-items:flex-start}.g h3{font-size:13px;margin:0;color:var(--mut)}
-#stage{position:relative;background:#000;border-radius:14px;overflow:hidden;aspect-ratio:16/9;min-height:260px}
+.sp{flex:1}
+/* controls */
+button,select,input.t,input[type=number]{font:inherit;font-size:14px;color:var(--fg);background:var(--sunk);border:1px solid transparent;border-radius:var(--r);padding:7px 12px;cursor:pointer}
+input.t,input[type=number]{cursor:text}
+button:hover{background:var(--line)}
+button.primary{background:var(--fg);color:var(--bg);font-weight:600}button.primary:hover{opacity:.88;background:var(--fg)}
+button.ghost{background:none;color:var(--mut)}button.ghost:hover{color:var(--fg);background:var(--sunk)}
+button:disabled{opacity:.35;cursor:not-allowed}
+select{appearance:none;-webkit-appearance:none;padding-right:30px;background-image:linear-gradient(45deg,transparent 50%,var(--mut) 50%),linear-gradient(135deg,var(--mut) 50%,transparent 50%);background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px;background-repeat:no-repeat;max-width:100%}
+:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+textarea:focus{outline:none}
+.bar,.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+label{font-size:14px;color:var(--fg);display:flex;align-items:center;gap:10px}
+input[type=range]{accent-color:var(--fg);width:120px}
+input[type=color]{width:34px;height:26px;border:0;padding:0;background:none;cursor:pointer}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;width:34px;height:20px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;flex:none;margin:0;transition:background .15s}
+input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+input[type=checkbox]:checked{background:var(--fg)}input[type=checkbox]:checked::after{transform:translateX(14px)}
+:root:not([data-theme="light"]) input[type=checkbox]:checked::after{background:var(--bg)}
+/* script */
+.doc{background:var(--surf);border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.dochead{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.dochead select{background-color:transparent;color:var(--mut);font-size:13px;max-width:190px;min-width:0;text-overflow:ellipsis}
+@media (max-width:640px){.dochead select{max-width:34%}#saved{display:none}#script{padding:18px}.docfoot{padding-left:18px}}
+.dochead input.t{background:none;flex:1;min-width:80px;font-weight:600;font-size:15px}
+textarea{width:100%;resize:vertical;background:none;color:var(--fg);border:0;font:17px/1.75 inherit;font-family:inherit}
+#script{min-height:52vh;padding:22px 24px;display:block}
+.docfoot{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 24px;border-top:1px solid var(--line)}
+.menu{position:relative}
+.menu summary{list-style:none;cursor:pointer;padding:7px 11px;border-radius:var(--r);color:var(--mut);font-size:18px;line-height:1}
+.menu summary::-webkit-details-marker{display:none}
+.menu summary:hover,.menu[open] summary{background:var(--sunk);color:var(--fg)}
+.menu .pop{position:absolute;right:0;top:calc(100% + 6px);z-index:6;min-width:200px;background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 12px 32px rgba(0,0,0,.14);display:flex;flex-direction:column}
+.menu .pop button{background:none;text-align:left;border-radius:8px}.menu .pop button:hover{background:var(--sunk)}
+.menu .pop input.t{margin:2px 0 6px;width:100%;background:var(--sunk)}
+.menu .pop hr{border:0;border-top:1px solid var(--line);margin:6px 4px}
+details.more{margin-top:28px}
+details.more>summary{cursor:pointer;color:var(--mut);font-size:14px;list-style:none}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"+ ";}details.more[open]>summary::before{content:"\2212  "}
+details.more textarea{background:var(--surf);border-radius:var(--r);padding:12px;min-height:80px;font-size:14px}
+/* studio */
+#stage{position:relative;background:#000;border-radius:18px;overflow:hidden;aspect-ratio:16/9;min-height:260px;margin-top:8px;box-shadow:0 0 0 1px var(--line),0 20px 50px -20px rgba(0,0,0,.45)}
+@media (max-width:640px){#stage{aspect-ratio:4/5;min-height:0}}
 #stage:fullscreen{aspect-ratio:auto;border-radius:0}
 #cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0}#cam.live{opacity:.35}
 #prompter{position:absolute;inset:0;overflow:hidden;-webkit-mask-image:linear-gradient(transparent 0,#000 30%,#000 50%,transparent 85%);mask-image:linear-gradient(transparent 0,#000 30%,#000 50%,transparent 85%)}
@@ -47,25 +81,71 @@ summary{cursor:pointer;color:var(--mut);font-size:14px;font-weight:600}
 #scroller p{margin:0 0 .9em}
 #scroller .s{opacity:.35;transition:opacity .2s}#scroller .s.cur,#scroller.plain .s{opacity:1}
 #scroller b{font-weight:700;border-bottom:3px solid var(--acc)}
-#eye{position:absolute;left:0;right:0;top:38%;height:2px;background:var(--acc);opacity:.5;pointer-events:none}
-#cue{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.72);color:#fff;padding:6px 18px;border-radius:20px;font-size:22px;font-weight:700;display:none;white-space:nowrap}
-#count{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:140px;font-weight:700;color:#fff;background:rgba(0,0,0,.55)}
-#recbadge{position:absolute;top:12px;right:14px;color:#fff;font-size:14px;display:none;gap:6px;align-items:center}
-#recbadge::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--acc)}
+#eye{position:absolute;left:0;right:0;top:38%;height:1px;background:rgba(255,255,255,.35);pointer-events:none}
+#cue{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.12);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;padding:5px 16px;border-radius:999px;font-size:15px;font-weight:600;letter-spacing:.02em;display:none;white-space:nowrap}
+#count{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:140px;font-weight:300;color:#fff;background:rgba(0,0,0,.55)}
+#recbadge{position:absolute;top:14px;right:16px;color:#fff;font-size:13px;font-variant-numeric:tabular-nums;display:none;gap:8px;align-items:center}
+#recbadge::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px rgba(229,72,77,.3)}
 #stage.ov #cam.live{opacity:1}
 #stage.ov #scroller{opacity:var(--ovo,.85);text-shadow:0 2px 10px #000,0 0 3px #000}
 #stage.ov.top #prompter{bottom:auto;height:45%}
 #stage.ov.mid #prompter{top:27%;bottom:27%}
 #gridov{position:absolute;inset:0;pointer-events:none;display:none;background:linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.3)) 33.33% 0/1px 100% no-repeat,linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.3)) 66.66% 0/1px 100% no-repeat,linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.3)) 0 33.33%/100% 1px no-repeat,linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.3)) 0 66.66%/100% 1px no-repeat}
-#level{height:6px;width:90px;background:var(--line);border-radius:4px;overflow:hidden;display:inline-block}#level i{display:block;height:100%;width:0;background:#34c759}
-#msg{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);padding:8px 16px;border-radius:22px;max-width:92vw;font-size:14px;z-index:9;box-shadow:0 6px 24px rgba(0,0,0,.3)}
-#msg:empty{display:none}#msg.err{color:var(--acc);border-color:var(--acc)}
-video#review{width:100%;border-radius:12px;display:none;background:#000}
-#plan,#report,#aiout{font-size:14px}#plan div,#report div,#aiout div{padding:5px 0}#plan div{border-bottom:1px solid var(--line)}
-#plan{max-height:240px;overflow:auto}#report button,#aiout button{margin:2px 6px 2px 0;padding:2px 10px}#aiout h3{font-size:13px;margin:14px 0 2px}
-.chip{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:10px;padding:0 7px;margin-left:5px;color:var(--mut);white-space:nowrap}
-.lib{padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}.lib input{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:3px 6px}.lib button{margin:6px 6px 0 0;padding:3px 12px}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+#scroller.hlw .s.cur .w.done{opacity:.55}
+#scroller .w{border-radius:.15em;transition:background .08s,color .08s}
+#scroller.hlw .s.cur .w.now{background:#ffd60a;color:#111;box-shadow:0 0 0 .08em #ffd60a;text-shadow:none}
+#scroller.hloff .s{opacity:1}
+#scroller .mk{display:inline-block;font-size:.42em;font-weight:700;line-height:1.5;vertical-align:.35em;padding:0 .7em;margin:0 .2em;border-radius:1em;border:2px solid;letter-spacing:.04em;opacity:.8;text-shadow:none}
+#scroller .mk.pa{color:#5ac8fa;border-color:#5ac8fa}
+#scroller .mk.br{color:#34c759;border-color:#34c759}
+#scroller .mk.live{opacity:1;color:#111;background:currentColor}
+#scroller .mk.pa.live{background:#5ac8fa}#scroller .mk.br.live{background:#34c759}
+#scroller.nopa .mk.pa,#scroller.nobr .mk.br{display:none}
+/* transport dock */
+.dock{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin-top:18px}
+.dock .l,.dock .r{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.dock .r{justify-content:flex-end}
+.dock .c{display:flex;align-items:center;gap:14px}
+.round{width:44px;height:44px;border-radius:50%;padding:0;display:grid;place-items:center}
+.round svg{width:18px;height:18px;fill:currentColor}
+#play{width:58px;height:58px;background:var(--fg);color:var(--bg)}#play:hover{opacity:.88}
+#play svg{width:22px;height:22px}#play .i-pause{display:none}#play[data-on="1"] .i-play{display:none}#play[data-on="1"] .i-pause{display:block}
+#rec{width:44px;height:44px;background:var(--surf);border:1px solid var(--line)}
+#rec::before{content:"";width:16px;height:16px;border-radius:50%;background:var(--acc)}
+#rec:hover{border-color:var(--acc)}
+.recctl{display:flex;gap:6px;align-items:center}.recctl button:disabled{display:none}
+#rec:disabled{display:none}
+.pace{display:flex;align-items:center;gap:6px;color:var(--mut);font-size:13px}
+.pace input[type=number]{width:62px;text-align:center;padding:6px}
+.pace select{background-color:transparent;color:var(--mut);padding-left:6px}
+.sub{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;min-height:20px}
+#level{height:4px;width:64px;background:var(--line);border-radius:4px;overflow:hidden;display:inline-block}#level i{display:block;height:100%;width:0;background:#30a46c}
+@media (max-width:700px){.dock{grid-template-columns:1fr;justify-items:center}.dock .l,.dock .r{justify-content:center}.dock .c{order:-1}}
+/* settings sheet */
+#sheet{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);background:var(--surf);z-index:8;transform:translateX(105%);visibility:hidden;transition:transform .25s ease,visibility .25s;overflow:auto;padding:20px 24px 40px;box-shadow:-20px 0 60px rgba(0,0,0,.15)}
+body.sheet #sheet{transform:none;visibility:visible}
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:7;display:none}body.sheet #scrim{display:block}
+.sheethead{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}.sheethead h2{margin:0;font-size:17px}
+.grp{margin-top:26px}.grp h3{font-size:12px;font-weight:600;color:var(--mut);margin:0 0 6px}
+.f{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.f:last-child{border-bottom:0}
+.f>span{color:var(--fg)}
+.f select{max-width:60%;background-color:transparent;color:var(--mut);text-align:right}.f select:hover{background-color:var(--sunk)}
+#next{text-transform:lowercase}#next::first-letter{text-transform:uppercase}
+.note{font-size:12.5px;color:var(--mut);margin:8px 0 0;line-height:1.5}
+.btns{display:flex;gap:8px;flex-wrap:wrap;padding-top:10px}
+/* messages, takes, ai */
+#msg{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 18px;border-radius:999px;max-width:92vw;font-size:14px;z-index:9;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+#msg:empty{display:none}#msg.err{background:var(--acc);color:#fff}
+video#review{width:100%;border-radius:16px;display:none;background:#000}
+#plan,#report,#aiout{font-size:14px}#plan div,#report div,#aiout div{padding:6px 0}#plan div{border-bottom:1px solid var(--line)}
+#plan{max-height:260px;overflow:auto}#report button,#aiout button{margin:2px 6px 2px 0;padding:3px 10px;font-size:13px}#aiout h3{font-size:13px;margin:16px 0 2px}
+.chip{display:inline-block;font-size:11px;background:var(--sunk);border-radius:999px;padding:1px 8px;margin-left:6px;color:var(--mut);white-space:nowrap}
+#lib{margin-top:8px}
+.lib{padding:14px 0;border-bottom:1px solid var(--line);font-size:14px}.lib input{background:var(--sunk);color:var(--fg);border:0;border-radius:6px;padding:4px 8px;font:inherit}.lib button{margin:8px 6px 0 0;padding:4px 12px;font-size:13px}
+#optout{background:var(--surf);border-radius:var(--r);padding:14px;font-size:15px}
+.card{background:var(--surf);border-radius:16px;padding:20px 22px;margin-top:16px}
+.card .bar:first-child{margin-top:0}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -76,73 +156,119 @@ video#review{width:100%;border-radius:12px;display:none;background:#000}
 </header>
 <main>
 <section class="tab on" id="t-script">
-  <h1>Your script</h1><p class="lead">Write or paste it here. It stays on this device.</p>
-  <div class="bar" style="margin:0 0 12px"><select id="slist" aria-label="Scripts" style="min-width:200px;max-width:100%"></select><input id="sname" class="t" style="width:190px" aria-label="Script name"><button id="sfav" title="Favorite" aria-label="Favorite">☆</button><button id="snew">New</button><button id="sdup">Duplicate</button><button id="sdel">Delete</button><span class="sp"></span><input id="ssearch" class="t" style="width:140px" placeholder="Search" aria-label="Search scripts"></div>
-  <textarea id="script" aria-label="Script" placeholder="Paste or write your script here"></textarea>
-  <div class="bar"><span class="meta" id="stats"></span><span class="meta" id="saved"></span><span class="sp"></span>
-    <button id="demo">Try demo</button><button id="imp">Import</button><button id="exp">Export</button><button id="bak" title="Download every script as JSON">Backup</button><button id="dict">Dictate</button><button class="primary" data-go="studio">Continue</button>
-    <input type="file" id="file" accept=".txt,.md,.json,text/plain,text/markdown,application/json" hidden></div>
-  <details><summary>Pronunciation and delivery plan</summary>
-    <h2>Versions</h2><div class="row" style="margin-top:0"><select id="vlist" aria-label="Versions" style="max-width:100%"></select><button id="vrest">Restore</button></div>
-    <h2>Pronunciation dictionary</h2><textarea id="pron" style="min-height:70px" aria-label="Pronunciation dictionary" placeholder="One per line, for example: CRM = C R M"></textarea>
+  <div class="doc">
+    <div class="dochead">
+      <input id="sname" class="t" aria-label="Script name">
+      <select id="slist" aria-label="Switch script" title="Switch script"></select>
+      <button id="sfav" class="ghost" title="Favorite" aria-label="Favorite">☆</button>
+      <details class="menu"><summary aria-label="More actions" title="More">•••</summary><div class="pop">
+        <input id="ssearch" class="t" placeholder="Search scripts" aria-label="Search scripts">
+        <button id="snew">New script</button><button id="sdup">Duplicate</button><button id="demo">Load demo</button>
+        <hr><button id="imp">Import file</button><button id="exp">Export as text</button><button id="bak">Back up all scripts</button>
+        <hr><button id="sdel">Delete script</button>
+      </div></details>
+    </div>
+    <textarea id="script" aria-label="Script" placeholder="Write or paste your script. It stays on this device."></textarea>
+    <div class="docfoot"><span class="meta" id="stats"></span><span class="meta" id="saved"></span><span class="sp"></span>
+      <button id="dict" class="ghost">Dictate</button><button class="primary" data-go="studio">Open studio</button>
+      <input type="file" id="file" accept=".txt,.md,.json,text/plain,text/markdown,application/json" hidden></div>
+  </div>
+  <details class="more"><summary>Versions, pronunciation and delivery plan</summary>
+    <h2>Versions</h2><div class="row" style="margin-top:0"><select id="vlist" aria-label="Versions"></select><button id="vrest">Restore</button></div>
+    <h2>Pronunciation</h2><textarea id="pron" aria-label="Pronunciation dictionary" placeholder="One per line, for example: CRM = C R M"></textarea>
     <h2>Delivery plan</h2><div id="plan" class="meta"></div>
-    <p class="meta">Tags like [PAUSE:1.2], [BREATHE], [CAMERA], [SLOW], [FAST], [EMPHASIZE], [ENERGY_UP] override the plan. They are never shown or spoken, and your original script is never changed.</p></details>
+    <p class="note">Tags like [PAUSE:1.2], [BREATHE], [CAMERA], [SLOW], [FAST], [EMPHASIZE] and [ENERGY_UP] override the plan. They are never shown or spoken.</p></details>
 </section>
+
 <section class="tab" id="t-studio">
   <div id="stage"><video id="cam" muted playsinline></video><div id="prompter"><div id="scroller"></div></div><div id="gridov"></div><div id="eye"></div><div id="cue"></div><div id="count"></div><div id="recbadge"><span id="timer">00:00</span></div></div>
-  <div class="bar"><button id="play" class="primary">Play</button><button id="restart">Restart</button>
-    <label>Pace <input type="range" id="wpm" min="30" max="300" value="145" aria-label="Words per minute"></label><input type="number" id="wpmN" min="30" max="300" value="145" aria-label="WPM">
-    <select id="preset" aria-label="Pace preset"><option value="110">Slow</option><option value="145" selected>Natural</option><option value="165">Presentation</option><option value="190">Fast</option></select>
-    <span class="sp"></span><span class="meta" id="remain"></span><button id="fs">Fullscreen</button></div>
-  <div class="meta" id="next"></div><div class="meta" id="live"></div>
-  <div class="bar"><button id="rec" class="primary">Start recording</button><button id="pause" disabled>Pause</button><button id="stop" disabled>Stop</button><button id="retake" disabled>Retake sentence</button><span id="level"><i></i></span><span class="sp"></span><button id="rehearse">Rehearse</button></div>
-  <details><summary>Settings</summary><div class="grid">
-    <div class="g"><h3>Coaching</h3>
-      <select id="dmode" aria-label="Mode"><option value="read">Read mode</option><option value="coached" selected>Coached mode</option><option value="director">Director mode</option></select>
-      <select id="inten" aria-label="Coaching intensity"><option value="light">Light coaching</option><option value="standard" selected>Standard coaching</option><option value="director">Full coaching</option></select>
-      <select id="plen" aria-label="Pause length"><option value="0.7">Short pauses</option><option value="1" selected>Medium pauses</option><option value="1.4">Long pauses</option></select>
-      <label><input type="checkbox" id="voice"> Ear coach voice</label><label><input type="checkbox" id="va"> Voice analysis</label>
-      <span class="meta">Voice analysis and dictation use your browser speech recognition, which may send audio to the browser vendor. Off by default.</span></div>
-    <div class="g"><h3>Display</h3>
-      <label>Text size <input type="range" id="size" min="20" max="90" value="40"></label>
-      <select id="font" aria-label="Font"><option value="Inter,system-ui,Helvetica,Arial,sans-serif">Sans</option><option value="Helvetica,Arial,sans-serif">Helvetica</option><option value="Georgia,serif">Serif</option><option value="ui-monospace,Menlo,Consolas,monospace">Mono</option></select>
-      <select id="align" aria-label="Alignment"><option value="center">Centered</option><option value="left">Left</option></select>
-      <label>Colour <input type="color" id="tcol" value="#ffffff"></label>
-      <label>Line height <input type="range" id="lhr" min="11" max="24" value="15"></label>
-      <label>Spacing <input type="range" id="lsr" min="0" max="10" value="0"></label>
-      <label>Eye line <input type="range" id="eyep" min="15" max="70" value="38"></label>
-      <select id="focus" aria-label="Focus window"><option value="1">Focus one sentence</option><option value="3">Focus three sentences</option><option value="p">Focus paragraph</option></select>
-      <label><input type="checkbox" id="grid"> Thirds grid</label>
-      <label><input type="checkbox" id="mh"> Mirror</label><label><input type="checkbox" id="mv"> Flip</label>
-      <label><input type="checkbox" id="ov"> Overlay script on video</label>
-      <label>Opacity <input type="range" id="ovo" min="30" max="100" value="85"></label>
-      <select id="ovp" aria-label="Overlay position"><option value="top">Top of screen</option><option value="mid">Middle</option><option value="full">Full height</option></select>
-      <button id="float" title="Chrome or Edge 116 and newer">Float over other windows</button></div>
-    <div class="g"><h3>Recording</h3>
-      <select id="mode" aria-label="Recording mode"><option value="av">Camera and microphone</option><option value="v">Camera only</option><option value="a">Microphone only</option><option value="s">Screen and microphone</option></select>
-      <select id="cd" aria-label="Countdown"><option value="0">No countdown</option><option value="3" selected>3 second countdown</option><option value="5">5 seconds</option><option value="10">10 seconds</option></select>
-      <select id="camsel" aria-label="Camera"><option value="">Default camera</option></select><select id="micsel" aria-label="Microphone"><option value="">Default microphone</option></select><select id="res" aria-label="Resolution"><option value="1280x720">720p</option><option value="1920x1080" selected>1080p</option><option value="3840x2160">4K if available</option></select>
-      <button id="prev">Camera preview</button><button id="check">Device check</button></div>
-  </div><p class="meta">Shortcuts: Space play or pause, Up and Down pace, Left and Right sentence, Home and End, M to mark while recording. The script is never recorded into the video.</p></details>
+  <div class="dock">
+    <div class="l">
+      <div class="pace"><span>Pace</span><input type="range" id="wpm" min="30" max="300" value="145" aria-label="Words per minute" style="width:90px"><input type="number" id="wpmN" min="30" max="300" value="145" aria-label="Words per minute"><select id="preset" aria-label="Pace preset"><option value="110">Slow</option><option value="145" selected>Natural</option><option value="165">Presentation</option><option value="190">Fast</option></select></div>
+    </div>
+    <div class="c">
+      <button id="restart" class="round ghost" title="Restart (Home)" aria-label="Restart"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg></button>
+      <button id="play" class="round" title="Play or pause (Space)" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></button>
+      <button id="rec" class="round" title="Start recording" aria-label="Start recording"></button>
+      <div class="recctl"><button id="pause" disabled>Pause</button><button id="stop" class="primary" disabled>Stop</button><button id="retake" class="ghost" disabled>Retake</button></div>
+    </div>
+    <div class="r">
+      <select id="vo" aria-label="Voice over" title="Voice over (V)"><option value="off">Voice over off</option><option value="repeat">Repeat after me</option><option value="lead">Read along</option></select>
+      <button id="fs" class="round ghost" title="Fullscreen" aria-label="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5v2H6v3zm10-5h6v5h-2V6h-4zM6 15v3h3v2H4v-5zm12 0h2v5h-6v-2h4z"/></svg></button>
+      <button id="setb" class="round ghost" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M4 7h10v2H4zm13-2h3v2h-3v2h-2V5zM4 15h4v2H4zm7-2h2v2h7v2h-7v2h-2z"/></svg></button>
+    </div>
+  </div>
+  <div class="sub"><span class="meta" id="next"></span><span class="meta"><span id="live"></span> <span id="remain"></span></span></div>
 </section>
+
+<aside id="sheet" aria-label="Settings">
+  <div class="sheethead"><h2>Settings</h2><button id="setx" class="round ghost" aria-label="Close settings"><svg viewBox="0 0 24 24"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z"/></svg></button></div>
+  <div class="grp"><h3>Reading</h3>
+    <label class="f"><span>Pauses</span><select id="plen" aria-label="Pause length"><option value="0">None</option><option value="0.4">Natural flow</option><option value="0.7">Short</option><option value="1" selected>Medium</option><option value="1.4">Long</option></select></label>
+    <label class="f"><span>Highlight</span><select id="hl" aria-label="Highlight"><option value="word" selected>Each word</option><option value="sentence">Sentence</option><option value="off">Off</option></select></label>
+    <label class="f"><span>Focus</span><select id="focus" aria-label="Focus window"><option value="1">One sentence</option><option value="3">Three sentences</option><option value="p">Paragraph</option></select></label>
+    <label class="f"><span>Pause and breath cues</span><input type="checkbox" id="pb" checked></label>
+    <label class="f"><span>Coaching</span><select id="dmode" aria-label="Mode"><option value="read">Off</option><option value="coached" selected>On</option><option value="director">Director</option></select></label>
+    <label class="f"><span>Coaching detail</span><select id="inten" aria-label="Coaching intensity"><option value="light">Light</option><option value="standard" selected>Standard</option><option value="director">Full</option></select></label>
+  </div>
+  <div class="grp"><h3>Voice</h3>
+    <label class="f"><span>Voice over voice</span><select id="vov" aria-label="Voice over voice"><option value="">Default</option></select></label>
+    <label class="f"><span>Voice over speed</span><input type="range" id="vor" min="70" max="150" value="105" aria-label="Voice over speed"></label>
+    <label class="f"><span>Spoken coaching</span><input type="checkbox" id="voice"></label>
+    <label class="f"><span>Live pace check</span><input type="checkbox" id="va"></label>
+    <p class="note">Voice over reads a phrase into your earphones. Record with your camera or laptop mic, not the AirPods mic, for clean audio. Live pace check uses browser speech recognition, which may send audio to the browser vendor.</p>
+  </div>
+  <div class="grp"><h3>Display</h3>
+    <label class="f"><span>Text size</span><input type="range" id="size" min="20" max="90" value="40"></label>
+    <label class="f"><span>Font</span><select id="font" aria-label="Font"><option value="Inter,system-ui,Helvetica,Arial,sans-serif">Sans</option><option value="Helvetica,Arial,sans-serif">Helvetica</option><option value="Georgia,serif">Serif</option><option value="ui-monospace,Menlo,Consolas,monospace">Mono</option></select></label>
+    <label class="f"><span>Alignment</span><select id="align" aria-label="Alignment"><option value="center">Center</option><option value="left">Left</option></select></label>
+    <label class="f"><span>Text colour</span><input type="color" id="tcol" value="#ffffff"></label>
+    <label class="f"><span>Line height</span><input type="range" id="lhr" min="11" max="24" value="15"></label>
+    <label class="f"><span>Letter spacing</span><input type="range" id="lsr" min="0" max="10" value="0"></label>
+    <label class="f"><span>Eye line</span><input type="range" id="eyep" min="15" max="70" value="38"></label>
+    <label class="f"><span>Mirror</span><input type="checkbox" id="mh"></label>
+    <label class="f"><span>Flip</span><input type="checkbox" id="mv"></label>
+    <label class="f"><span>Thirds grid</span><input type="checkbox" id="grid"></label>
+    <label class="f"><span>Script over video</span><input type="checkbox" id="ov"></label>
+    <label class="f"><span>Overlay position</span><select id="ovp" aria-label="Overlay position"><option value="top">Top</option><option value="mid">Middle</option><option value="full">Full height</option></select></label>
+    <label class="f"><span>Overlay opacity</span><input type="range" id="ovo" min="30" max="100" value="85"></label>
+    <div class="btns"><button id="float" title="Chrome or Edge 116 and newer">Float over other windows</button></div>
+  </div>
+  <div class="grp"><h3>Recording</h3>
+    <label class="f"><span>Record</span><select id="mode" aria-label="Recording mode"><option value="av">Camera and mic</option><option value="v">Camera only</option><option value="a">Mic only</option><option value="s">Screen and mic</option></select></label>
+    <label class="f"><span>Countdown</span><select id="cd" aria-label="Countdown"><option value="0">None</option><option value="3" selected>3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option></select></label>
+    <label class="f"><span>Camera</span><select id="camsel" aria-label="Camera"><option value="">Default</option></select></label>
+    <label class="f"><span>Microphone</span><select id="micsel" aria-label="Microphone"><option value="">Default</option></select></label>
+    <label class="f"><span>Quality</span><select id="res" aria-label="Resolution"><option value="1280x720">720p</option><option value="1920x1080" selected>1080p</option><option value="3840x2160">4K if available</option></select></label>
+    <div class="f"><span>Mic level</span><span id="level"><i></i></span></div>
+    <div class="btns"><button id="prev">Camera preview</button><button id="check">Device check</button><button id="rehearse">Rehearse</button></div>
+  </div>
+  <p class="note" style="margin-top:28px">Shortcuts: Space play, V voice over, B cues, arrows for pace and sentence, M mark, R retake. The script is never recorded.</p>
+</aside>
+<div id="scrim"></div>
+
 <section class="tab" id="t-takes">
-  <h1>Takes</h1><p class="lead">Saved automatically on this device. Nothing is uploaded.</p>
+  <h1>Takes</h1><p class="lead">Saved on this device. Nothing is uploaded.</p>
   <video id="review" controls playsinline></video>
-  <div class="row" id="after" style="display:none"><input id="rname" class="t" style="width:220px" aria-label="File name" value="take-1"><button id="dl" class="primary">Download</button><button id="discard">Close</button></div>
+  <div class="row" id="after" style="display:none"><input id="rname" class="t" style="width:220px" aria-label="File name" value="take-1"><button id="dl" class="primary">Download</button><button id="discard" class="ghost">Close</button></div>
   <div id="report"></div>
-  <h2>Library</h2>
-  <div class="row" style="margin-top:0"><button id="folder">Also save to a folder</button><span class="meta" id="libinfo"></span></div>
+  <div class="row" style="margin-top:28px"><h2 style="margin:0">Library</h2><span class="sp"></span><span class="meta" id="libinfo"></span><button id="folder" class="ghost">Also save to a folder</button></div>
   <div id="lib"></div>
 </section>
+
 <section class="tab" id="t-ai">
-  <h1>AI director</h1><p class="meta" id="aistate">Checking for AI access...</p>
-  <div class="bar"><button id="analyze" class="primary" disabled>Analyze script</button><button id="aistop" style="display:none">Stop</button><label><input type="checkbox" id="useai" checked> Use AI plan in prompter</label></div>
-  <div class="bar"><select id="optsel" aria-label="Rewrite action"><option>Make easier to speak</option><option>Make more natural</option><option>Make conversational</option><option>Make more confident</option><option>Shorten</option><option>Create a stronger hook</option><option>Add a call to action</option><option>Convert to talking points</option></select>
-    <button id="opt" disabled>Rewrite</button><button id="undo" style="display:none">Undo last replace</button></div>
-  <div id="aiout"></div>
-  <textarea id="optout" readonly aria-label="Rewritten script" style="display:none;min-height:150px;margin-top:12px"></textarea>
-  <div class="row"><button id="useopt" style="display:none">Replace script with this</button></div>
-  <p class="meta">AI runs free in your browser, or through Claude when opened in the Claude viewer. Your script is never changed unless you press a Replace button, and Undo restores it.</p>
+  <h1>AI director</h1><p class="lead" id="aistate">Checking for AI access...</p>
+  <div class="card">
+    <div class="bar"><button id="analyze" class="primary" disabled>Analyze script</button><button id="aistop" style="display:none">Stop</button><span class="sp"></span><label>Use in prompter <input type="checkbox" id="useai" checked></label></div>
+    <div id="aiout"></div>
+  </div>
+  <div class="card">
+    <div class="bar"><select id="optsel" aria-label="Rewrite action"><option>Make easier to speak</option><option>Make more natural</option><option>Make conversational</option><option>Make more confident</option><option>Shorten</option><option>Create a stronger hook</option><option>Add a call to action</option><option>Convert to talking points</option></select>
+      <button id="opt" disabled>Rewrite</button><span class="sp"></span><button id="undo" class="ghost" style="display:none">Undo last replace</button></div>
+    <textarea id="optout" readonly aria-label="Rewritten script" style="display:none;min-height:150px;margin-top:12px"></textarea>
+    <div class="row"><button id="useopt" class="primary" style="display:none">Replace script with this</button></div>
+  </div>
+  <p class="note" style="margin-top:16px">AI runs free in your browser. Your script only changes when you press Replace, and Undo restores it.</p>
 </section>
 </main>
 <div id="msg" role="status"></div>
@@ -161,7 +287,7 @@ const nm=x=>String(x||'').toLowerCase().replace(/[^a-z0-9 ]/g,'').trim();
 const aiFind=(arr,key,txt)=>$('useai').checked?(Array.isArray(arr)?arr:[]).find(x=>x&&x[key]&&nm(txt).includes(nm(x[key]).slice(0,24))):null;
 const LVL={light:['PAUSE','CAMERA'],standard:['PAUSE','BREATHE','CAMERA','EMPHASIZE'],director:ORDER};
 const EMW=/^(not|never|always|only|nothing|every|everything|truth|completely|overnight|failure|persistence|secret|mistake|biggest|worst|best|free|zero|million|billion|years)$/i;
-let T=0,TL=[],total=0,lastIdx=-1,lastCue='',lastVoice=0;
+let lastW=-2,lastWEl=null,lastMk=null,T=0,TL=[],total=0,lastIdx=-1,lastCue='',lastVoice=0;
 function fmt(s){s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function parse(){
   const out=[];
@@ -184,11 +310,11 @@ function plan(S){
     if(n<=5&&i>0)pause+=0.3;
     if(i===N-1)pause=Math.max(pause,1.2);
     else if(S[i+1].para!==s.para)pause=Math.max(pause,0.8);
-    const tp=has('PAUSE');pause=tp?(parseFloat(tp.v)||pause):pause*pm;
-    const ap=aiFind(ai&&ai.pauses,'after',s.txt);if(ap&&!tp)pause=Math.max(0.3,Math.min(2.5,+ap.seconds||pause));
+    const tp=has('PAUSE');pause=tp?(parseFloat(tp.v)||pause):pause*pm;const auto=!tp;
+    const ap=aiFind(ai&&ai.pauses,'after',s.txt);if(ap&&!tp&&pm>0)pause=Math.max(0.3,Math.min(2.5,+ap.seconds||pause))*Math.min(1,pm);
     since+=n;
     let br=!!has('BREATHE')||(i<N-1&&(since>=25||n>=18));
-    if(br){since=0;pause=Math.max(pause,0.9)}
+    if(br){since=0;if(auto)pause=Math.max(pause,0.9*pm)}
     s.pause=pause;
     s.factor=has('SLOW')||n>=16?0.88:has('FAST')?1.12:1;
     s.em=[];w.forEach((x,j)=>{const c=x.replace(/[^\w]/g,'');if(s.em.length<2&&c&&(EMW.test(c)||(c.length>2&&c===c.toUpperCase()&&/[A-Z]/.test(c))))s.em.push(j)});
@@ -213,16 +339,21 @@ function render(){
   S.forEach((s,i)=>{
     if(s.para!==pi){P=document.createElement('p');sc.appendChild(P);pi=s.para}
     const sp=document.createElement('span');sp.className='s';
-    s.txt.split(/\s+/).forEach((x,j)=>{const e=s.em.includes(j)?document.createElement('b'):document.createDocumentFragment();if(e.nodeType===1)e.textContent=x;else e.appendChild(document.createTextNode(x));sp.appendChild(e);sp.appendChild(document.createTextNode(' '))});
+    const ws=[],wl=s.txt.split(/\s+/);
+    wl.forEach((x,j)=>{const e=document.createElement(s.em.includes(j)?'b':'span');e.className='w';e.textContent=x;sp.appendChild(e);sp.appendChild(document.createTextNode(' '));ws.push(e)});
+    const pc=s.cues.find(c=>c.k==='BREATHE')||s.cues.find(c=>c.k==='PAUSE');let mk=null;
+    if(pc){mk=document.createElement('span');mk.className='mk '+(pc.k==='BREATHE'?'br':'pa');mk.textContent=pc.k==='BREATHE'?'breathe':'pause '+s.pause.toFixed(1)+'s';mk.setAttribute('aria-hidden','true');sp.appendChild(mk)}
     P.appendChild(sp);
     const commas=(s.txt.match(/[,;]/g)||[]).length,speak=s.n/(wpm*s.factor)*60+commas*0.2*pm;
-    TL.push({el:sp,t0:t,speak,pause:s.pause,cues:s.cues,y0:0,y1:0});
+    const cw=wl.reduce((a,x)=>a+x.length+3,0),base=speak-commas*0.2*pm,ws0=[];let wt=0;
+    wl.forEach(x=>{ws0.push(wt);wt+=base*(x.length+3)/cw+(/[,;]$/.test(x)?0.2*pm:0)});
+    TL.push({el:sp,t0:t,speak,pause:s.pause,cues:s.cues,y0:0,y1:0,ws,ws0,mk});
     t+=speak+s.pause;words+=s.n;
     const d=document.createElement('div');d.textContent=(s.txt.length>58?s.txt.slice(0,58)+'...':s.txt);
     s.cues.forEach(c=>{const x=document.createElement('span');x.className='chip';x.textContent=c.txt.toLowerCase();d.appendChild(x)});
     pl.appendChild(d);
   });
-  total=t;T=keep*total;lastIdx=-1;
+  total=t;T=keep*total;lastIdx=-1;lastW=-2;cueVis();
   $('stats').textContent=words+' words, '+$('script').value.length+' characters, about '+fmt(total)+' at '+wpm+' WPM';
   layout();upd();
 }
@@ -235,13 +366,19 @@ function layout(){
   TL.forEach((e,i)=>{const r=e.el.getBoundingClientRect();e.y0=r.top-base;e.y1=i<TL.length-1?TL[i+1].el.getBoundingClientRect().top-base:e.y0+r.height*0.6});
 }
 function idxAt(){let i=0;for(let k=0;k<TL.length;k++){if(TL[k].t0<=T)i=k;else break}return i}
-function pick(list){const ok=LVL[$('inten').value];return ORDER.map(k=>list.find(c=>c.k===k)).find(c=>c&&ok.includes(c.k))}
+function okList(){const ok=LVL[$('inten').value];return $('pb').checked?ok:ok.filter(k=>k!=='PAUSE'&&k!=='BREATHE')}
+function cueVis(){
+  const sc=$('scroller'),ok=$('dmode').value==='read'?[]:okList(),h=$('hl').value;
+  sc.classList.toggle('nopa',!ok.includes('PAUSE'));sc.classList.toggle('nobr',!ok.includes('BREATHE'));
+  sc.classList.toggle('hlw',h==='word');sc.classList.toggle('hloff',h==='off');
+}
+function pick(list){const ok=okList();return ORDER.map(k=>list.find(c=>c.k===k)).find(c=>c&&ok.includes(c.k))}
 function say2(c){
   const now=performance.now();
   if(c.txt===lastCue)return;lastCue=c.txt;
   if($('dmode').value==='director'&&playing&&now-lastVoice>3500){lastVoice=now;speak(c.say)}
 }
-function speak(t){if(!$('voice').checked||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1.1;u.volume=.8;speechSynthesis.speak(u)}catch(e){}}
+function speak(t){if(!$('voice').checked||!window.speechSynthesis||(earOn()&&playing))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1.1;u.volume=.8;speechSynthesis.speak(u)}catch(e){}}
 function upd(){
   const sc=$('scroller'),cue=$('cue'),mode=$('dmode').value;
   sc.classList.toggle('plain',mode==='read');
@@ -249,7 +386,11 @@ function upd(){
   if(TL.length){
     const i=idxAt(),e=TL[i],tin=T-e.t0;
     y=tin<e.speak?e.y0+(e.y1-e.y0)*(tin/e.speak):e.y1;
-    if(i!==lastIdx){const fm=$('focus').value;TL.forEach((x,k)=>x.el.classList.toggle('cur',fm==='p'?x.el.parentNode===e.el.parentNode:fm==='3'?Math.abs(k-i)<=1:k===i));lastIdx=i;nextList(i)}
+    if(i!==lastIdx){const fm=$('focus').value;TL.forEach((x,k)=>x.el.classList.toggle('cur',fm==='p'?x.el.parentNode===e.el.parentNode:fm==='3'?Math.abs(k-i)<=1:k===i));TL.forEach((x,k)=>x.ws.forEach(w=>w.classList.toggle('done',k<i)));lastIdx=i;lastW=-2;nextList(i)}
+    let wi=-1;if(tin<e.speak){for(let k=0;k<e.ws0.length;k++){if(e.ws0[k]<=tin)wi=k;else break}}else wi=e.ws.length;
+    const wk=i*100000+wi;
+    if(wk!==lastW){lastW=wk;if(lastWEl)lastWEl.classList.remove('now');lastWEl=null;e.ws.forEach((w,k)=>w.classList.toggle('done',k<wi));if(wi>=0&&wi<e.ws.length){lastWEl=e.ws[wi];lastWEl.classList.add('now')}}
+    const mk=tin>=e.speak&&e.mk?e.mk:null;if(mk!==lastMk){if(lastMk)lastMk.classList.remove('live');if(mk)mk.classList.add('live');lastMk=mk}
     let c=null;
     if(mode!=='read'){
       const early=tin<Math.min(2,e.speak*0.6),late=tin>=e.speak-0.5;
@@ -263,29 +404,75 @@ function upd(){
 function nextList(i){
   const el=$('next');
   if($('dmode').value==='read'){el.textContent='';return}
-  const ok=LVL[$('inten').value],items=[];
+  const ok=okList(),items=[];
   for(let j=i;j<Math.min(TL.length,i+5);j++){const e=TL[j];e.cues.forEach(c=>{const tm=c.at==='s'?e.t0:e.t0+e.speak;if(ok.includes(c.k)&&tm>T-0.1)items.push([tm,c])})}
   items.sort((a,b)=>a[0]-b[0]);
   el.textContent=items.length?'Next: '+items.slice(0,3).map(x=>fmt(x[0])+' '+x[1].txt).join('   '):'';
 }
 function loop(ts){
   if(!playing)return;
-  const dt=last?(ts-last)/1000:0;last=ts;T+=dt;
+  const dt=last?(ts-last)/1000:0;last=ts;if(earOn())T=earT();else T+=dt;
   if(T>=total){T=total;toggle(false);if(!rec)vStop()}
   upd();if(playing)requestAnimationFrame(loop);
 }
 function toggle(on){
   playing=on===undefined?!playing:on;last=0;
-  $('play').textContent=playing?'Pause':'Play';
+  $('play').dataset.on=playing?'1':'';$('play').setAttribute('aria-label',playing?'Pause':'Play');
+  earStop();if(playing&&earOn())earStart();
   if(playing)requestAnimationFrame(loop);
 }
-function setWpm(v){wpm=Math.min(300,Math.max(30,Math.round(+v)||145));$('wpm').value=wpm;$('wpmN').value=wpm;render()}
+/* voice over: reads the script into the earphones phrase by phrase */
+const ES=window.speechSynthesis;let EAR={gen:0,k:-1,ph:'',st:0,dur:0,tm:null},CH=[];
+function earOn(){return !!ES&&$('vo').value!=='off'}
+function mkChunks(){
+  CH=[];
+  TL.forEach((e,i)=>{
+    const ws=e.ws.map(w=>w.textContent),n=ws.length;let a=0;
+    const cut=[];ws.forEach((w,j)=>{if(j<n-1&&(/[,;:]$/.test(w)||/^[-\u2013\u2014]$/.test(ws[j+1])||j-a>=8)&&j-a>=2){cut.push(j+1);a=j+1}});
+    let s0=0;cut.concat([n]).forEach(b=>{if(b<=s0)return;CH.push({i,a:s0,b,txt:ws.slice(s0,b).join(' '),t0:e.t0+e.ws0[s0],t1:b<n?e.t0+e.ws0[b]:e.t0+e.speak,end:b===n});s0=b});
+  });
+}
+function earT(){
+  const c=CH[EAR.k];if(!c)return T;
+  if(EAR.ph==='done')return total;
+  if(EAR.ph==='listen'||EAR.ph==='gap')return EAR.ph==='gap'?c.t1:c.t0;
+  const f=Math.min(1,(performance.now()-EAR.st)/1000/Math.max(.2,EAR.dur));
+  return c.t0+(c.t1-c.t0)*f;
+}
+function earStop(){EAR.gen++;clearTimeout(EAR.tm);if(ES)try{ES.cancel()}catch(e){}$('live').textContent=''}
+function earStart(){
+  if(!TL.length)return;mkChunks();
+  let k=CH.findIndex(c=>c.t1>T+0.05);if(k<0){T=total;return}
+  earSay(k,EAR.gen);
+}
+function earPhase(ph,dur){EAR.ph=ph;EAR.st=performance.now();EAR.dur=dur||0;$('live').textContent=ph==='listen'?'Voice over: listen':ph==='turn'?'Voice over: your turn':''}
+function earSay(k,g){
+  if(g!==EAR.gen||!playing)return;
+  if(k>=CH.length){earPhase('done');return}
+  const c=CH[k],mode=$('vo').value,rate=$('vor').value/100,est=c.txt.split(' ').length/(2.7*rate)+0.3;
+  EAR.k=k;
+  const u=new SpeechSynthesisUtterance(c.txt),v=ES.getVoices().find(x=>x.name===$('vov').value);
+  if(v){u.voice=v;u.lang=v.lang}u.rate=rate;
+  let done=false;const fin=()=>{if(done||g!==EAR.gen)return;done=true;clearTimeout(EAR.tm);
+    const beat=c.end?Math.min(1.2,TL[c.i].pause*0.6):0.1;
+    if(mode==='repeat'){const d=Math.max(0.6,c.t1-c.t0);earPhase('turn',d);EAR.tm=setTimeout(()=>{earPhase('gap');EAR.tm=setTimeout(()=>earSay(k+1,g),beat*1000)},d*1000)}
+    else{earPhase('gap');EAR.tm=setTimeout(()=>earSay(k+1,g),beat*1000)}};
+  u.onend=fin;u.onerror=fin;
+  earPhase(mode==='repeat'?'listen':'turn',est);
+  if(mode!=='repeat')$('live').textContent='Voice over: talk one phrase behind';
+  try{ES.speak(u)}catch(e){fin()}
+  EAR.tm=setTimeout(fin,(est*2+1.5)*1000);
+}
+function earResync(){if(playing&&earOn()){earStop();earStart()}}
+function voFill(){if(!ES)return;const sel=$('vov'),keep=sel.value||(JSON.parse(store('tp.set')||'{}').vov||''),vs=ES.getVoices();if(!vs.length)return;sel.textContent='';const d=document.createElement('option');d.value='';d.textContent='Default voice';sel.appendChild(d);const lg=(navigator.language||'en').slice(0,2);vs.filter(v=>v.lang.slice(0,2)===lg).concat(vs.filter(v=>v.lang.slice(0,2)!==lg)).forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o)});sel.value=keep}
+if(ES){voFill();ES.addEventListener&&ES.addEventListener('voiceschanged',voFill)}else{$('vo').disabled=true;$('vo').title='Voice over is not supported in this browser'}
+function setWpm(v){wpm=Math.min(300,Math.max(30,Math.round(+v)||145));$('wpm').value=wpm;$('wpmN').value=wpm;render();earResync()}
 async function intro(){if($('dmode').value==='director'&&$('voice').checked&&window.speechSynthesis){speak("You're ready. I'll keep the coaching subtle.");await new Promise(r=>setTimeout(r,3200))}}
 $('script').addEventListener('input',()=>{render();clearTimeout(window._s);window._s=setTimeout(()=>{store('tp.script',$('script').value);$('saved').textContent='Saved'},400)});
 $('wpm').oninput=e=>setWpm(e.target.value);$('wpmN').onchange=e=>setWpm(e.target.value);
 $('preset').onchange=e=>setWpm(e.target.value);
 $('play').onclick=()=>toggle();
-$('restart').onclick=()=>{T=0;lastIdx=-1;upd()};
+$('restart').onclick=()=>{T=0;lastIdx=-1;upd();earResync()};
 $('size').oninput=e=>{$('scroller').style.fontSize=e.target.value+'px';layout();upd()};
 $('mh').onchange=$('mv').onchange=()=>upd();
 $('fs').onclick=()=>{const s=$('stage');if(document.fullscreenElement)document.exitFullscreen();else if(s.requestFullscreen)s.requestFullscreen().catch(()=>say('Fullscreen is not available in this browser.',true));else say('Fullscreen is not supported here.',true)};
@@ -298,6 +485,8 @@ function onKey(e){
   const k=e.key,i=idxAt();
   if((k==='r'||k==='R')&&rec&&rec.state!=='inactive'){retake();return}
   if((k==='m'||k==='M')&&rec&&rec.state!=='inactive'){const t=el();marks.push(t);say('Marked '+fmt(t)+'.');return}
+  if(k==='v'||k==='V'){const o=$('vo');o.value=o.value==='off'?(store('tp.vo')||'repeat'):'off';o.dispatchEvent(new Event('change'));saveSet();return}
+  if(k==='b'||k==='B'){$('pb').checked=!$('pb').checked;cueChange();saveSet();return}
   if(k===' '){e.preventDefault();toggle()}
   else if(k==='ArrowUp'){e.preventDefault();setWpm(wpm+5)}
   else if(k==='ArrowDown'){e.preventDefault();setWpm(wpm-5)}
@@ -305,10 +494,14 @@ function onKey(e){
   else if(k==='ArrowRight'){T=TL[Math.min(TL.length-1,i+1)]?TL[Math.min(TL.length-1,i+1)].t0:0;upd()}
   else if(k==='Home'){T=0;upd()}
   else if(k==='End'){T=total;upd()}
+  if(/^Arrow(Left|Right)$|^Home$|^End$/.test(k))earResync();
 }
 document.addEventListener('keydown',onKey);
 $('rehearse').onclick=async()=>{if(!TL.length){say('Add a script first.',true);return}T=0;lastIdx=-1;upd();await intro();t0=Date.now();paused=0;vStart();toggle(true);say('Rehearsing. Nothing is being recorded.')};
 ['dmode','inten','plen'].forEach(id=>$(id).onchange=()=>{render()});
+function cueChange(){cueVis();layout();lastIdx=-1;lastCue='';upd();say($('pb').checked?'Pause and breath cues on.':'Pause and breath cues off.')}
+$('pb').addEventListener('change',cueChange);
+$('vo').addEventListener('change',()=>{if($('vo').value!=='off')store('tp.vo',$('vo').value);earStop();if(playing&&earOn())earStart();say($('vo').value==='off'?'Voice over off.':'Voice over on. Put your earphones in.')});$('hl').addEventListener('change',()=>{cueVis();lastIdx=-1;upd()});
 if(!window.speechSynthesis){$('voice').disabled=true;$('voice').parentNode.title='Spoken coaching is not supported in this browser'}
 document.addEventListener('fullscreenchange',()=>{layout();upd()});
 /* Devices */
@@ -633,7 +826,7 @@ $('folder').onclick=async()=>{
   try{dir=await showDirectoryPicker({mode:'readwrite'});say('New takes will also be saved to the folder "'+dir.name+'" while this page is open.')}catch(e){}
 };
 libRender();
-if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&!/claude/.test(location.host)){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+
 
 function showTab(n){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.id==='t-'+n));
@@ -642,10 +835,14 @@ function showTab(n){
   if(n==='takes')libRender();
   window.scrollTo(0,0);
 }
+function sheet(on){document.body.classList.toggle('sheet',on);if(on)$('setx').focus()}
+$('setb').onclick=()=>sheet(true);$('setx').onclick=()=>sheet(false);$('scrim').onclick=()=>sheet(false);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){sheet(false);document.querySelectorAll('details.menu[open]').forEach(d=>d.open=false)}});
+document.addEventListener('click',e=>{document.querySelectorAll('details.menu[open]').forEach(d=>{if(!d.contains(e.target)||(e.target.tagName==='BUTTON'))d.open=false})});
 document.querySelectorAll('[data-tab],[data-go]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab||b.dataset.go)));
 
 let cur=null,st=null,loading=false,EYE=.38,quiet=0;
-const SET=['size','font','align','tcol','lhr','lsr','eyep','focus','ovo','ovp','dmode','inten','plen','cd','mode','grid','res'];
+const SET=['vo','vov','vor','pb','hl','size','font','align','tcol','lhr','lsr','eyep','focus','ovo','ovp','dmode','inten','plen','cd','mode','grid','res'];
 function newScript(text,name){return {id:String(Date.now())+Math.floor(Math.random()*99),name:name||'Untitled script',text:text||'',fav:false,updated:Date.now(),versions:[]}}
 const sAll=async()=>(await tx('readonly',x=>x.getAll(),'scripts'))||[];
 const sPut=o=>tx('readwrite',x=>x.put(o),'scripts');
@@ -727,11 +924,11 @@ async function fillDevices(){
 function retake(){
   if(!rec||rec.state==='inactive'||!TL.length)return;
   const i=idxAt(),j=Math.max(0,i-(T-TL[i].t0<2?1:0));
-  marks.push(el());T=TL[j].t0;lastIdx=-1;upd();say('Retake marked. Start again from the highlighted sentence.');
+  marks.push(el());T=TL[j].t0;lastIdx=-1;upd();earResync();say('Retake marked. Start again from the highlighted sentence.');
 }
 $('retake').onclick=retake;
 $('script').value=store('tp.script')||'';
-render();if(!$('script').value)say('Paste a script or press Try demo.');
+render();if(!$('script').value)say('Paste a script, or load the demo from the ••• menu.');
 window.addEventListener('resize',()=>{layout();upd()});
 loadSet();sInit();
 })();
